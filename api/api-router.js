@@ -3,7 +3,8 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken"); // installed this
 
 const Users = require("./api-model.js");
-const secrets = require("../config/secrets.js");
+const secret = require("../config/secrets.js");
+const restricted = require("../auth/restricted-middleware");
 
 router.post("/register", (req, res) => {
   let user = req.body;
@@ -19,7 +20,7 @@ router.post("/register", (req, res) => {
     });
 });
 
-router.get("/users", (req, res) => {
+router.get("/users", restricted, (req, res) => {
   Users.find()
     .then(users => {
       res.json(users);
@@ -45,6 +46,9 @@ router.post("/login", (req, res) => {
       } else {
         res.status(401).json({ message: "invalid credentials" });
       }
+    })
+    .catch(err => {
+      res.status(500).json(err);
     });
 });
 
@@ -57,6 +61,6 @@ const signToken = user => {
   const options = {
     expiresIn: "8h"
   };
-  return jwt.sign(payload, secrets.jwtSecret, options);
+  return jwt.sign(payload, secret.jwtSecret, options);
 };
 module.exports = router;
